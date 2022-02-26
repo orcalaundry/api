@@ -60,8 +60,7 @@ REDIS_DB=0
 REDIS_PASS=
 ```
 
-3. Finally, run `make deploy` to provision the rest of the infrastructure.
-   - Run `make deploy` again to push any changes to AWS.
+3. A GitHub action is configured to automatically deploy/update on each push to the main branch. You may also do this manually using `make deploy`.
 
 ## Miscellaneous
 
