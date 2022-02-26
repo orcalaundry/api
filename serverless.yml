@@ -1,19 +1,26 @@
 service: rc4laundry-api-aws
 frameworkVersion: "2 || 3"
+# Load variables from .env file. They can be referenced in this file as ${env:SOME_VAR}.
 useDotenv: true
 
 custom:
+  # Default to "dev" as the stage, unless the `--stage` option is used.
   stage: ${opt:stage, 'dev'}
+  # usageTable is the name of the dynamodb table storing usage records.
   usageTable: usage-table-${self:custom.stage}
+  # Bundles dependencies from requirements.txt and adds them to PYTHONPATH.
+  # See https://www.serverless.com/blog/serverless-python-packaging/ for more info.
   pythonRequirements:
-    dockerizePip: true
-    slim: true
+    dockerizePip: true # We don't really need this, but it somehow doesn't work without it.
+    slim: true # Remove tests, info, and cache files.
+  # This does not refer to the dynamodb in AWS. It is for serverless-dynamodb-local.
   dynamodb:
     stages:
       - dev
     start:
       port: 8001
       migrate: true
+  # Keep only 1 other version.
   prune:
     automatic: true
     number: 1
@@ -32,6 +39,8 @@ provider:
     API_KEY: ${env:API_KEY}
     DYNAMODB_REGION: ${self:provider.region}
     DYNAMODB_USAGE_TABLE: ${self:custom.usageTable}
+  # This is the default IAM Role used by all lambda functions. Give them
+  # permissions on UsageTable in dynamodb.
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -42,6 +51,7 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource:
+        # Get the Amazon Resource Name of UsageTable.
         - "Fn::GetAtt": [UsageTable, Arn]
 
 resources:
@@ -49,6 +59,7 @@ resources:
     UsageTable:
       Type: AWS::DynamoDB::Table
       Properties:
+        # `loc` is an identifier for the location of the machine, and should take the format {floor}:{position}.
         AttributeDefinitions:
           - AttributeName: loc
             AttributeType: S
@@ -59,6 +70,7 @@ resources:
             KeyType: HASH
           - AttributeName: started_at
             KeyType: RANGE
+        # Should be free with the amount of traffic we expect.
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.usageTable}
 
@@ -79,6 +91,7 @@ package:
     - "**/__pycache__/**"
 
 functions:
+  # Deploy the entire FastAPI app as one serverless function.
   app:
     handler: app.main.handler
     events:

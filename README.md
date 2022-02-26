@@ -1,19 +1,15 @@
-# RC4LaundryBot2021
+This repo contains code for the JSON API used by the laundry setup.
 
-Revamped laundry bot for RC4 under CSC IT.
-
-## JSON API
-
-### Requirements
+## Requirements
 
 Development for the JSON API requires these.
 
 - Python 3.8
 - [Docker Compose](https://docs.docker.com/compose/install/)
 - [Serverless CLI](https://www.serverless.com/framework/docs/getting-started)
-- NPM
+- NPM (used by serverless)
 
-### Development
+## Development
 
 1. Create a virtual environment and install dependencies.
 
@@ -28,12 +24,12 @@ npm install
 3. Start the dev server with the commands below. The default port is 8000, and OpenAPI docs are at http://localhost:8000/docs.
 
 ```bash
-sls dynamodb start # <-- in a separate terminal
-docker-compose up -d
-uvicorn app.main:app --reload
+sls dynamodb start # starts dynamodb-local
+docker-compose up -d # spin up containers for redis
+uvicorn app.main:app --reload # start dev server
 ```
 
-### Testing
+## Testing
 
 Tests can be run with pytest.
 
@@ -41,7 +37,7 @@ Tests can be run with pytest.
 python -m pytest -v
 ```
 
-### Deployment
+## Deployment
 
 This flowchart briefly describes the components of the API.
 

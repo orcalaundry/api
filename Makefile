@@ -20,4 +20,4 @@ fmt:
 
 .PHONY: deploy
 deploy:
-	sls cleanCache && sls deploy
+	sls requirements cleanCache && sls deploy
