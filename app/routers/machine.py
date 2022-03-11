@@ -67,7 +67,7 @@ async def update_machine(
     pos: int = Query(..., description=_field_pos.description),
     ms: IMachineService = Depends(get_machine_service),
 ) -> Machine:
-    return ms.update(floor, pos, mu).to_machine()
+    return ms.update(floor, pos, mu.to_machine_update_x()).to_machine()
 
 
 @router.put(

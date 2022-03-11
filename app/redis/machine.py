@@ -18,7 +18,7 @@ from app.machine import (
     IMachineService,
     MachineFilter,
     MachineStatus,
-    MachineUpdate,
+    MachineUpdateX,
     MachineX,
 )
 
@@ -36,7 +36,8 @@ class MachineService(IMachineService):
         self.rj: RedisJSON = redis.json()
         self.rs: RediSearch = redis.ft(index_name="machineIdx")
 
-        # Try creating the RediSearch index.
+        # Try creating the RediSearch index. If it fails just log and proceed.
+        # TODO move this somewhere else, it should probably be in the Lua seeding script.
         try:
             self.rs.create_index(
                 [
@@ -67,7 +68,7 @@ class MachineService(IMachineService):
         res = self.rs.search(self.build_query(mf))
         return [self.from_document(doc) for doc in res.docs]
 
-    def update(self, floor: int, pos: int, mu: MachineUpdate) -> MachineX:
+    def update(self, floor: int, pos: int, mu: MachineUpdateX) -> MachineX:
         key = MachineX._create_key(floor, pos)
         res = self.rj.get(key)
         if res is None:
@@ -84,13 +85,13 @@ class MachineService(IMachineService):
         self.update(
             floor,
             pos,
-            MachineUpdate(
+            MachineUpdateX(
                 status=MachineStatus.in_use, last_started_at=datetime.utcnow()
             ),
         )
 
     def stop(self, floor: int, pos: int) -> None:
-        self.update(floor, pos, MachineUpdate(status=MachineStatus.idle))
+        self.update(floor, pos, MachineUpdateX(status=MachineStatus.idle))
 
     def delete(self, floor: int, pos: int) -> MachineX:
         raise NotImplementedError()

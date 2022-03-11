@@ -103,13 +103,16 @@ class MachineX(_BaseMachine):
             type=self.type,
             status=self.status,
             last_started_at=self.last_started_at,
-            duration=self.duration.total_seconds(),
+            duration=int(self.duration.total_seconds()),
         )
 
 
 class Machine(_BaseMachine):
-    """The same as MachineX, but uses an int type for the duration
-    to comply with openapi number formats."""
+    """
+    The same as MachineX, but uses an int type for the duration
+    to comply with openapi number formats. This is used as the
+    external representation.
+    """
 
     duration: int = Field(
         ...,
@@ -137,6 +140,19 @@ class _BaseMachineOptional(BaseModel):
 class MachineUpdate(_BaseMachineOptional):
     """Model used for partial updates to Machines."""
 
+    duration: Optional[int] = _field_duration_opt
+    last_started_at: Optional[datetime] = _field_last_started_at_opt
+
+    def to_machine_update_x(self) -> "MachineUpdateX":
+        return MachineUpdateX(
+            duration=timedelta(seconds=self.duration) if self.duration else None,
+            last_started_at=self.last_started_at,
+        )
+
+
+class MachineUpdateX(_BaseMachineOptional):
+    """Model used for partial updates to Machines. Internal representation."""
+
     duration: Optional[timedelta] = _field_duration_opt
     last_started_at: Optional[datetime] = _field_last_started_at_opt
 
@@ -161,7 +177,7 @@ class IMachineService(Protocol):
         pass
 
     @abstractmethod
-    def update(self, floor: int, pos: int, mu: MachineUpdate) -> MachineX:
+    def update(self, floor: int, pos: int, mu: MachineUpdateX) -> MachineX:
         pass
 
     @abstractmethod

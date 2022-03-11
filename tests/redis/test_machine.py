@@ -8,7 +8,7 @@ from app.machine import (
     MachineFilter,
     MachineStatus,
     MachineType,
-    MachineUpdate,
+    MachineUpdateX,
     MachineX,
 )
 
@@ -60,7 +60,7 @@ def test_update_machine(redis, machine_service, create_washer, create_dryer):
     new_w = machine_service.update(
         create_washer["floor"],
         create_washer["pos"],
-        MachineUpdate(status=MachineStatus.in_use),
+        MachineUpdateX(status=MachineStatus.in_use),
     )
     assert new_w.status == MachineStatus.in_use
     assert rj.get(new_w.create_key())["status"] == MachineStatus.in_use
@@ -69,7 +69,7 @@ def test_update_machine(redis, machine_service, create_washer, create_dryer):
     new_d = machine_service.update(
         create_dryer["floor"],
         create_dryer["pos"],
-        MachineUpdate(last_started_at=now),
+        MachineUpdateX(last_started_at=now),
     )
     assert new_d.last_started_at == now
     assert rj.get(new_d.create_key())["last_started_at"] == now.isoformat()
