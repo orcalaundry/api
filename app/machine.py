@@ -87,7 +87,10 @@ class _BaseMachine(BaseModel):
         return cls(**json.loads(j))
 
     def create_typed_key(self):
-        """Creates an id by pairing the floor and pos fields, along with the machine type."""
+        """
+        Creates an id by pairing the floor and pos fields, along with the
+        machine type.
+        """
         return f"{self.type}:{self.floor}:{self.pos}"
 
 
@@ -109,9 +112,8 @@ class MachineX(_BaseMachine):
 
 class Machine(_BaseMachine):
     """
-    The same as MachineX, but uses an int type for the duration
-    to comply with openapi number formats. This is used as the
-    external representation.
+    The same as MachineX, but uses an int type for the duration to comply with
+    openapi number formats. This is used as the external representation.
     """
 
     duration: int = Field(
@@ -131,8 +133,7 @@ class Machine(_BaseMachine):
 
 
 class _BaseMachineOptional(BaseModel):
-    """A utility class with every field optional and
-    defaulting to null."""
+    """A utility class with every field optional and defaulting to null."""
 
     status: Optional[MachineStatus] = _field_status_opt
 
@@ -166,7 +167,9 @@ class MachineFilter(_BaseMachineOptional):
 
 
 class IMachineService(Protocol):
-    """Interface contract for CRUD methods associated to machines."""
+    """
+    "Interface" for CRUD methods associated to machines.
+    """
 
     @abstractmethod
     def create(self, m: MachineX) -> None:

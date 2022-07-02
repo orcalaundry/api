@@ -1,3 +1,5 @@
+"""Contains model definitions and CRUD methods for raspis."""
+
 import json
 from abc import abstractmethod
 from datetime import datetime
@@ -5,7 +7,8 @@ from typing import List, Optional, Protocol
 
 from pydantic import BaseModel, Field
 
-# These are the pydantic field descriptors relevant to the Raspi model.
+# These are the pydantic field descriptors relevant to the Raspi model. Use to
+# provide a description for the fields.
 _field_floor = Field(
     ..., description="Which floor the raspi is on. There is one raspi on each floor."
 )
@@ -68,24 +71,32 @@ class RaspiFilter(_BaseRaspiOptional):
 
 
 class IRaspiService(Protocol):
-    """'Interface' declaration for the methods a raspi service should implement."""
+    """
+    "Interface" declaration for the methods a raspi service should
+    implement.
+    """
 
     @abstractmethod
     def create(self, rpi: RaspiIn) -> None:
+        """Create a new raspi."""
         pass
 
     @abstractmethod
     def upsert(self, rpi: RaspiIn) -> None:
+        """Performs upsert on a raspi."""
         pass
 
     @abstractmethod
     def find(self, rpif: RaspiFilter) -> List[RaspiOut]:
+        """Takes a filter and returns a list of raspis that match the filter."""
         pass
 
     @abstractmethod
     def update(self, floor: int, rpiu: RaspiUpdate) -> RaspiOut:
+        """Performs partial update on a raspi."""
         pass
 
     @abstractmethod
     def delete(self, floor: int) -> RaspiOut:
+        """Deletes a raspi."""
         pass

@@ -1,11 +1,8 @@
-import asyncio
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 
 from app.auth import validate_api_key
-from app.dynamodb import get_dynamodb
-from app.dynamodb.usage import create as create_usage
 from app.machine import (
     IMachineService,
     Machine,
@@ -94,7 +91,5 @@ async def stop_machine(
     floor: int = Query(..., description=_field_floor.description),
     pos: int = Query(..., description=_field_pos.description),
     ms: IMachineService = Depends(get_machine_service),
-    db=Depends(get_dynamodb),
 ):
-    asyncio.ensure_future(create_usage(floor, pos, db, ms))
     return ms.stop(floor, pos)
