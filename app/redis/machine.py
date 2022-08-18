@@ -1,18 +1,15 @@
+import logging
 from datetime import datetime
 from typing import List
 
 from fastapi import Depends, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import HTTPException
-from fastapi.logger import logger
 from redis import Redis
 from redis.commands.json import JSON as RedisJSON
 from redis.commands.search import Search as RediSearch
 from redis.commands.search.document import Document
-from redis.commands.search.field import NumericField, TextField
-from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
-from redis.exceptions import ResponseError
 
 from app.machine import (
     IMachineService,
@@ -24,10 +21,15 @@ from app.machine import (
 
 from . import get_redis
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 
 class MachineService(IMachineService):
-    """Service class implementing the IMachineService interface,
-    with Redis as the datastore."""
+    """
+    Service class implementing the IMachineService interface, with Redis as
+    the datastore.
+    """
 
     root_path: str = "."
 
@@ -35,23 +37,6 @@ class MachineService(IMachineService):
         self.redis: Redis = redis
         self.rj: RedisJSON = redis.json()
         self.rs: RediSearch = redis.ft(index_name="machineIdx")
-
-        # Try creating the RediSearch index. If it fails just log and proceed.
-        # TODO move this somewhere else, it should probably be in the Lua seeding script.
-        try:
-            self.rs.create_index(
-                [
-                    NumericField("$.floor", sortable=True, as_name="floor"),
-                    NumericField("$.pos", sortable=True, as_name="pos"),
-                    TextField("$.status", sortable=True, as_name="status"),
-                    TextField("$.type", sortable=True, as_name="type"),
-                ],
-                definition=IndexDefinition(
-                    index_type=IndexType.JSON, prefix=["machine:"]
-                ),
-            )
-        except ResponseError as e:
-            logger.info(e)
 
     def create(self, m: MachineX) -> None:
         """Creates a machine. Fails silently if a machine at the same floor
@@ -65,7 +50,9 @@ class MachineService(IMachineService):
 
     def find(self, mf: MachineFilter) -> List[MachineX]:
         """Queries Redis for machines, based on the filter provided."""
-        res = self.rs.search(self.build_query(mf))
+        q = self.build_query(mf)
+        logger.info(f"executing RediSearch query; query={q.query_string()}")
+        res = self.rs.search(q)
         return [self.from_document(doc) for doc in res.docs]
 
     def update(self, floor: int, pos: int, mu: MachineUpdateX) -> MachineX:
@@ -102,8 +89,8 @@ class MachineService(IMachineService):
 
     @staticmethod
     def build_query(mf: MachineFilter) -> Query:
-        """Builds a RediSearch query string based on a
-        MachineFilter instance."""
+        """Builds a RediSearch query string based on a MachineFilter
+        instance."""
 
         def floor(v):
             return f"@floor:[{v} {v}]"

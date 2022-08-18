@@ -4,11 +4,20 @@ local WASHER_DURATION = 1800
 local DRYER_DURATION = 2400
 local FLOORS = { 5, 8, 11, 14, 17 }
 
+redis.call(
+  "FT.CREATE", "machineIdx", "ON", "JSON",
+  "PREFIX", 1, "machine:", "SCHEMA",
+  "$.floor", "AS", "floor", "NUMERIC", "SORTABLE",
+  "$.pos", "AS", "pos", "NUMERIC", "SORTABLE",
+  "$.status", "AS", "status", "TEXT", "SORTABLE",
+  "$.type", "AS", "type", "TEXT", "SORTABLE"
+)
+
 for _, floor in ipairs(FLOORS) do
-	-- seed the washers
-	for pos = 0, 1 do
-		redis.call("JSON.SET", "machine"..":"..floor..":"..pos, ".", string.format(
-			[[
+  -- seed the washers
+  for pos = 0, 1 do
+    redis.call("JSON.SET", "machine" .. ":" .. floor .. ":" .. pos, ".", string.format(
+      [[
 			{
 				"floor": %i,
 				"pos": %i,
@@ -17,13 +26,13 @@ for _, floor in ipairs(FLOORS) do
 				"duration": %i,
 				"last_started_at": "1970-01-01T00:00:00Z"
 			}
-			]], floor, pos, WASHER_DURATION
-		))
-	end
-	-- and the dryers
-	for pos = 2, 3 do
-		redis.call("JSON.SET", "machine"..":"..floor..":"..pos, ".", string.format(
-			[[
+			]]  , floor, pos, WASHER_DURATION
+    ))
+  end
+  -- and the dryers
+  for pos = 2, 3 do
+    redis.call("JSON.SET", "machine" .. ":" .. floor .. ":" .. pos, ".", string.format(
+      [[
 			{
 				"floor": %i,
 				"pos": %i,
@@ -32,7 +41,7 @@ for _, floor in ipairs(FLOORS) do
 				"duration": %i,
 				"last_started_at": "1970-01-01T00:00:00Z"
 			}
-			]], floor, pos, DRYER_DURATION
-		))
-	end
+			]]  , floor, pos, DRYER_DURATION
+    ))
+  end
 end
